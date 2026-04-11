@@ -51,3 +51,68 @@ Since you're in a monorepo, do you have a specific tool managing it (like **Turb
 - **State Handoff**: When finishing a task, append a "Handoff Note" in a comment if there is a specific context another agent should know when the user switches tools (e.g., `// AI-CONTEXT: Refactored X to support Y, needs Z implementation next`).
 - **Conflict Resolution**: If a repository "Spec" contradicts a "Copilot Instruction," the Spec takes precedence for logic, but the Instruction takes precedence for syntax/formatting.
 
+##Replacing open code default agents
+
+Yes, it is very easy. In 2026, OpenCode moved away from hardcoded logic to a **"Mode-based" configuration system**. You can either override the existing plan/build agents or create entirely new ones (like a review or refactor agent).
+### 1. The Global Override (Permanent)
+To change the system prompts for every project, edit your global JSON config in Debian:
+```bash
+nano ~/.config/opencode/opencode.json
+
+```
+Add or modify the "agent" (or "mode") section:
+```json
+{
+  "agent": {
+    "plan": {
+      "model": "anthropic/claude-3-5-sonnet", 
+      "prompt": "{file:~/.config/opencode/prompts/my-custom-plan.txt}",
+      "tools": { "webfetch": true, "bash": false }
+    },
+    "build": {
+      "prompt": "Act as a Senior Debian SysAdmin. Use minimalist code. Always include unit tests.",
+      "temperature": 0.2
+    }
+  }
+}
+
+```
+ * **The {file:...} trick**: You can point the prompt to a separate .txt file so you don't have to manage a giant string inside a JSON file.
+### 2. The Project-Specific Override (Flexible)
+If you only want custom agents for a specific project (e.g., a React project vs. a Rust project), use an **AGENTS.md** file in your project root.
+OpenCode reads this file and injects it into the agent's instructions.
+```markdown
+# AGENTS.md
+
+## General Instructions
+- We use Tab-size: 2
+- No semicolons in TypeScript
+
+## @build
+- You are an expert at Debian WSL optimization.
+- Before writing code, check if the library is available via `apt`.
+
+## @plan
+- Focus on performance and memory usage.
+- Output plans in Mermaid diagram format.
+
+```
+### 3. How to Verify They Swapped
+Run the debug command we used earlier to see your new instructions in the "System Message" block:
+```bash
+opencode run "check my system prompt" --print-logs --log-level DEBUG
+
+```
+### 💡 Pro-Tip: The "Tab" Switcher
+Once you have custom agents, you can cycle through them instantly in the OpenCode TUI by hitting **Tab**.
+ * **Plan Mode**: Great for "Thinking" and searching (usually read-only).
+ * **Build Mode**: Great for "Doing" (has permission to edit files).
+ * **Your Custom Mode**: Will appear in the list if you've added it to your JSON.
+### Summary of Agent Hierarchy
+| Level | Location | Best for... |
+|---|---|---|
+| **System** | Built-in | Default fallback. |
+| **Global** | ~/.config/opencode/opencode.json | Your personal "coding style." |
+| **Project** | ./AGENTS.md | Team standards and specific tech stacks. |
+**Are you planning to make the "Build" agent more aggressive (e.g., auto-running tests) or more conservative (e.g., always asking for permission)?**
+
