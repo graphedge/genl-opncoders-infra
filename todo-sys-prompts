@@ -43,3 +43,11 @@ Llama 3.3 70B can sometimes revert to "helpful assistant" mode and give you simp
  * **Turborepo Examples:** Great for seeing how professional monorepos structure their README and tasks—Llama models love the way Vercel structures metadata.
  * **Protocols for Agentic Coding:** While designed for Claude, the "Computer Use" and "File System" prompt patterns here are incredibly effective when ported to Llama 4 Scout for monorepo navigation.
 Since you're in a monorepo, do you have a specific tool managing it (like **Turborepo, Nx, or Bazel**)? I can add specific logic for running their CLI commands (e.g., turbo run build --filter...) into the system prompt.
+
+### 4. placeholder
+
+### 5. CO-AGENT SYNERGY & ALIGNMENT
+- **Rule Mirroring**: You MUST check for `.github/copilot-instructions.md` or `AGENTS.md` at the start of the session. Adopt all style, architectural, and naming conventions defined there to ensure consistency with other AI agents (Copilot/Claude).
+- **State Handoff**: When finishing a task, append a "Handoff Note" in a comment if there is a specific context another agent should know when the user switches tools (e.g., `// AI-CONTEXT: Refactored X to support Y, needs Z implementation next`).
+- **Conflict Resolution**: If a repository "Spec" contradicts a "Copilot Instruction," the Spec takes precedence for logic, but the Instruction takes precedence for syntax/formatting.
+
