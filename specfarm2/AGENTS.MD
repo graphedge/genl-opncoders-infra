@@ -15,7 +15,7 @@ You are an expert coder in **Bash**, the primary language of this repository (Sp
 - Cite spec requirements by file and line when implementing
 - Tab size: 2 (see `.github/copilot-instructions.md` for formatting conventions)
 - Test suite: `tests/run_all_tests.sh` (bash-only, zero external dependencies)
-- **Respect `CODE_STYLE.md` for editing discipline:** never rewrite entire files unless explicitly requested; always use targeted diffs and patch tools (see `@build: Surgical Edits` below)
+- If you have installation trouble, pause for clarifying and await; recommend a user sudo install in another shell
 
 ## @plan
 
@@ -107,50 +107,6 @@ See original agents.md lines 42–58 (merged) + new section L92–115.
 
 Handoff: Extended agent-call patterns; next agent should test cross-repo delegation with genl-opncoders-infra/@review.
 ```
-
----
-
-### @build: Surgical Edits (Patch-First Discipline)
-
-**Goal:** Prevent wholesale file rewrites. Every edit must be minimal, targeted, and reviewable.
-
-**Rules (MANDATORY):**
-1. Never rewrite an entire file unless creating a new file or an explicit full refactor is requested.
-2. Always read the file first using `view` or `grep` before proposing any edits.
-3. Output changes as unified diffs or search/replace blocks with 3 lines of context (before/after).
-4. Each edit block: 5–15 lines max (excluding context lines).
-5. Do NOT use placeholders like `// ... rest of file unchanged` — use proper diff format.
-
-**Editing Workflow:**
-1. **Read:** Examine current state with read-only tools
-2. **Plan:** Document which lines change and why (reference spec line or task ID)
-3. **Patch:** Use `edit` tool with exact search/replace blocks (minimal hunks)
-4. **Validate:** Run full test suite (`bash tests/run_all_tests.sh`)
-5. **Report:** Cite tasks completed, tests passed, and specific line changes
-
-**Example (GOOD):**
-```
-[token-timeout-fix] done | 45% → 92% tests passing
-
-Minimal edit: src/auth/auth.sh L32–34 (3 lines)
-- Added: timeout 30 wrapper around token_refresh() call
-- Reason: specs/auth.md L15 requires timeout handling
-- Tests: 2/18 → 17/18 passing (edge case timeout handling verified)
-```
-
-**Example (BAD — AVOID):**
-```
-Rewrote src/auth/auth.sh (all 200 lines)
-Added timeout handling + other improvements
-// ... rest of file unchanged
-```
-
-**When full rewrites ARE acceptable:**
-- Creating a brand new file (no previous version)
-- Complete refactor explicitly requested with approval in spec
-- Major architectural change documented in specs/
-
-See `CODE_STYLE.md` for detailed guidance, examples, and cross-platform rules.
 
 ---
 
