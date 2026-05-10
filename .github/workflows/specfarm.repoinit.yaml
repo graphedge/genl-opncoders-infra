@@ -15,6 +15,57 @@
 # 
 # Detect calling LLM via: CALLING_LLM, AGENT_CALLER, or Copilot CLI context
 # To override, set AGENT_BACKEND env var (e.g., AGENT_BACKEND=copilot-haiku)
+#
+# ── LOCAL / COPILOT-CLI EXECUTION NOTES (added 2026-05-09) ──────────────────
+# When GitHub Actions is unavailable or the cloud run fails, this workflow can
+# be driven locally with the Copilot CLI (claude-sonnet / haiku) as the
+# inference layer. Here is exactly what was done and what to watch for:
+#
+# STEP 0 — specify-cli install
+#   • pip / pip3 are often absent on externally-managed Python envs (PEP 668).
+#   • `unzip` is also frequently missing; use Python as the fallback:
+#       python3 -c "import zipfile; zipfile.ZipFile('...zip').extractall('...')"
+#   • specify-cli may already be installed via pipx at ~/.local/bin/specify.
+#     Always `export PATH="$HOME/.local/bin:$PATH"` before calling it.
+#
+# STEP 1 — agent template bootstrap
+#   • Templates are downloaded from:
+#       https://github.com/github/spec-kit/releases/download/v0.4.4/
+#           spec-kit-template-copilot-sh-v0.4.4.zip
+#   • Use python3 zipfile module if `unzip` is missing (see above).
+#   • All required *.md agent files land in .github/agents/.
+#
+# STEP 2 — source context collection
+#   • This repo is LIGHT density (0 code lines; docs are the primary source).
+#   • Context is built from: todo-NNN-* files, specfarm2/agents.md,
+#     specs/*/spec.md, and any *.md at repo root.
+#   • Written to /tmp/constitution_context.txt (~28 KB in current run).
+#
+# STEP 3 — inference (Copilot CLI as calling LLM)
+#   • CALLING_LLM is implicitly the Copilot CLI session (claude-sonnet-4.6).
+#   • Because `copilot` is not a piped subprocess here, each agent phase is
+#     executed directly by the CLI agent reading context and writing output:
+#       constitution  → .specify/memory/constitution.md
+#       clarifications→ .specify/memory/clarifications.md
+#       spec (per TODO)→ specs/NNN-inferred/spec.md
+#       plan (per TODO)→ specs/NNN-inferred/plan.md
+#   • The agent reads /tmp/constitution_context.txt, applies the prompt
+#     overrides in /tmp/prompt_constitution.txt etc., and writes output files.
+#
+# STEP 4 — per-TODO spec+plan loop
+#   • todo-001-sys-prompts → specs/002-inferred/spec.md + plan.md
+#   • todo-002-filemodes.md → specs/003-inferred/spec.md + plan.md
+#   • Base spec (no TODO) → specs/001-inferred/spec.md + plan.md
+#   • Symlinked into specs/000-inferred/ for backwards compat.
+#
+# KNOWN ISSUES / WATCH-OUTS
+#   • `unzip` missing on Debian slim — always use python3 zipfile fallback.
+#   • pip absent on PEP 668 envs — pipx is the reliable path.
+#   • GITHUB_ENV / GITHUB_PATH don't exist locally; set vars with `export`.
+#   • upload-artifact step is a no-op locally; artifacts stay in ./artifacts/.
+#   • If cloud run fails with 404 on workflow_dispatch, the workflow file was
+#     not yet on the default branch — push it first, then re-trigger.
+# ────────────────────────────────────────────────────────────────────────────
 
 
 name: Specify-driven agents
